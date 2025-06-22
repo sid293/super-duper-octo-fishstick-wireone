@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Toolbar from './components/Toolbar';
 import Canvas from './components/Canvas';
 import SaveModal from './components/SaveModal';
+import { api } from './utils/api';
 import * as fabric from 'fabric';
 import './App.css';
 
@@ -47,11 +48,7 @@ function App() {
     const handleActualSave = async () => {
         const data = JSON.stringify(canvas.toDatalessJSON());
         try {
-            await fetch('/api/drawings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: drawingName, data }),
-            });
+            await api.saveDrawing(drawingName, data);
             setShowSaveModal(false);
             loadDrawings();
         } catch (error) {
@@ -61,8 +58,7 @@ function App() {
     
     const loadDrawings = async () => {
         try {
-            const response = await fetch('/api/drawings');
-            const { drawings } = await response.json();
+            const { drawings } = await api.getDrawings();
             setSavedDrawings(drawings);
         } catch (error) {
             console.error('Failed to load drawings', error);
@@ -74,8 +70,7 @@ function App() {
         const id = select.value;
         if (id && id !== 'Load a drawing') {
             try {
-                const response = await fetch(`/api/drawings/${id}`);
-                const { data } = await response.json();
+                const { data } = await api.getDrawing(id);
                 const parsedData = JSON.parse(data); // Parse the string data
                 
                 canvas.loadFromJSON(parsedData, canvas.renderAll.bind(canvas), (o, object) => {
